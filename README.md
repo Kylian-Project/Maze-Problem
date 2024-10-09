@@ -59,6 +59,12 @@ This will compile and run the tests defined in `tests/test_maze.c`.
 
 <hr>
 
+## Screenshots
+
+![Maze Example](https://raw.githubusercontent.com/Kylian-Project/Maze-Problem/refs/heads/main/dist/maze_ex.png?token=GHSAT0AAAAAACYWLSQOZJU5W5PY4QXHXSUAZYHCMSQ)
+
+<hr>
+
 ## Features
 
 - **Maze Generation**: The project generates mazes using a recursive division method.
