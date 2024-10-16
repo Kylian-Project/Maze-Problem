@@ -41,8 +41,12 @@ void divide(Maze* maze, int x_start, int x_end, int y_start, int y_end) {
     bool divide_horizontally = (y_end - y_start > x_end - x_start);
 
     if (divide_horizontally) {
-        // Dividing horizontally
+        // Dividing horizontally randomly
         int wall_y = y_start + rand() % (y_end - y_start);  // Choose a position for the dividing wall (random not divide in 2) !!!!!!!!
+        
+        // Divide in 2 every time
+        // int wall_y = y_start + (y_end - y_start) / 2;
+
         divide_horizontal(maze, wall_y, x_start, x_end);
 
         // Recursive call for the two subspaces
