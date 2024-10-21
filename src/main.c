@@ -1,5 +1,6 @@
 #include "../include/maze.h"
 #include "../include/maze_generator.h"
+#include "../include/path_finding.h"
 
 int main(int argc, char *argv[]) {
     // Chceck Args NB
@@ -28,6 +29,10 @@ int main(int argc, char *argv[]) {
     
     // Print maze with beauti ASCII :)
     print_maze(maze);
+
+    // Display path length
+    int path_length = dijkstra(maze);
+    printf("Path length: %d\n", path_length);
     
     // Free maze
     free_maze(maze);

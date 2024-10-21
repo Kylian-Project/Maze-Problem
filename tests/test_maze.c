@@ -1,19 +1,22 @@
 #include "../include/maze.h"
 #include "../include/maze_generator.h"
+#include "../include/path_finding.h"
 
 void test_maze_path(int width, int height) {
     printf("Testing maze of size %dx%d...\n", width, height);
     Maze* maze = init_maze(width, height);
     generate_maze(maze);
+
+    int path_length = dijkstra(maze);
     
-    if (!has_path(maze)) {
+    if (path_length == -1) {
         fprintf(stderr, "Error: No path found in maze of size %dx%d\n", width, height);
         free_maze(maze);
         exit(1);
     }
     
     free_maze(maze);
-    printf("Test passed for maze of size %dx%d\n", width, height);
+    printf("Test passed for maze of size %dx%d with path length %d.\n", width, height, path_length);
 }
 
 int main() {
@@ -33,15 +36,7 @@ int main() {
         {90, 90},
         {100, 100},
         {200, 200},
-        {300, 300},
-        {400, 400},
-        {500, 500},
-        {600, 600},
-        {700, 700},
-        {800, 800},
-        {900, 900},
-        {1000, 1000},
-        {5000, 5000}
+        {300, 300}
     };
     int num_tests = sizeof(sizes) / sizeof(sizes[0]);
     

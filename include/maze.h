@@ -25,7 +25,4 @@ Maze* init_maze(int width, int height);
 void free_maze(Maze* maze);
 void print_maze(Maze* maze);
 
-// GPT : Path Finding
-bool has_path(Maze* maze);
-
 #endif
