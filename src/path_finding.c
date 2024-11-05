@@ -1,43 +1,89 @@
 #include "../include/path_finding.h"
 
-// Function to find the node with the smallest distance that has not been visited
-int min_distance(int** dist, bool** visited, int width, int height) {
-    int min_dist = INT_MAX; // Initialize the minimum distance to infinity
-    Node min_node = {-1, -1, INT_MAX}; // Initialize the node with the minimum distance
-
-    // Find the node with the smallest distance that has not been visited
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            if (!visited[y][x] && dist[y][x] < min_dist) {
-                min_dist = dist[y][x];
-                min_node.x = x;
-                min_node.y = y;
-                min_node.dist = min_dist;
-            }
-        }
-    }
-    return (min_node.x == -1) ? -1 : min_node.dist; // Retourner la distance minimale ou -1 si aucun noeud n'est trouvé
+// Fonction pour créer un nouveau tas binaire
+MinHeap* create_min_heap(int capacity) {
+    MinHeap* heap = (MinHeap*)malloc(sizeof(MinHeap));
+    heap->nodes = (Node*)malloc(capacity * sizeof(Node));
+    heap->size = 0;
+    heap->capacity = capacity;
+    return heap;
 }
 
-// Function to check if the move is valid
+// Fonction pour échanger deux nœuds dans le tas
+void swap_nodes(Node* a, Node* b) {
+    Node temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+// Fonction pour réorganiser le tas après l'insertion d'un nouvel élément
+void heapify_up(MinHeap* heap, int idx) {
+    while (idx > 0 && heap->nodes[idx].dist < heap->nodes[(idx - 1) / 2].dist) {
+        swap_nodes(&heap->nodes[idx], &heap->nodes[(idx - 1) / 2]);
+        idx = (idx - 1) / 2;
+    }
+}
+
+// Fonction pour réorganiser le tas après l'extraction de l'élément minimum
+void heapify_down(MinHeap* heap, int idx) {
+    int smallest = idx;
+    int left = 2 * idx + 1;
+    int right = 2 * idx + 2;
+
+    if (left < heap->size && heap->nodes[left].dist < heap->nodes[smallest].dist) {
+        smallest = left;
+    }
+    if (right < heap->size && heap->nodes[right].dist < heap->nodes[smallest].dist) {
+        smallest = right;
+    }
+    if (smallest != idx) {
+        swap_nodes(&heap->nodes[idx], &heap->nodes[smallest]);
+        heapify_down(heap, smallest);
+    }
+}
+
+// Fonction pour insérer un nouveau nœud dans le tas
+void insert_min_heap(MinHeap* heap, int x, int y, int dist) {
+    if (heap->size == heap->capacity) {
+        fprintf(stderr, "Heap overflow\n");
+        return;
+    }
+    heap->nodes[heap->size] = (Node){x, y, dist};
+    heapify_up(heap, heap->size);
+    heap->size++;
+}
+
+// Fonction pour extraire le nœud avec la plus petite distance du tas
+Node extract_min(MinHeap* heap) {
+    if (heap->size == 0) {
+        fprintf(stderr, "Heap underflow\n");
+        return (Node){-1, -1, INT_MAX};
+    }
+    Node min_node = heap->nodes[0];
+    heap->nodes[0] = heap->nodes[heap->size - 1];
+    heap->size--;
+    heapify_down(heap, 0);
+    return min_node;
+}
+
+// Fonction pour vérifier si le déplacement est valide
 bool is_valid_move(Maze* maze, int x, int y, bool** visited) {
     return (x >= 0 && x < maze->width && y >= 0 && y < maze->height && !visited[y][x]);
 }
 
 int dijkstra(Maze* maze) {
-    int** dist = malloc(maze->height * sizeof(int*));  // Alloc memory for distances table
-    bool** visited = malloc(maze->height * sizeof(bool*));  // Alloc memory for visited cells table
+    int** dist = malloc(maze->height * sizeof(int*));  // Allocation de mémoire pour la table des distances
+    bool** visited = malloc(maze->height * sizeof(bool*));  // Allocation de mémoire pour la table des cellules visitées
 
     int start_x = -1, start_y = -1;
 
-    // Initialize the distances and visited cells tables
+    // Initialisation des tables des distances et des cellules visitées
     for (int i = 0; i < maze->height; i++) {
         dist[i] = malloc(maze->width * sizeof(int));
         visited[i] = malloc(maze->width * sizeof(bool));
         for (int j = 0; j < maze->width; j++) {
-
-            dist[i][j] = INT_MAX;  // Initialize distances to infinity
-            visited[i][j] = false;  // No cells visited initially
+            dist[i][j] = INT_MAX;  // Initialisation des distances à l'infini
+            visited[i][j] = false;  // Aucune cellule visitée initialement
 
             if (maze->grid[i][j].start) {
                 start_x = j;
@@ -46,81 +92,80 @@ int dijkstra(Maze* maze) {
         }
     }
 
-    // If no start cell is found, return error
+    // Si aucune cellule de départ n'est trouvée, retourner une erreur
     if (start_x == -1 || start_y == -1) {
         fprintf(stderr, "Error: start cell not found\n");
         return -1;
     }
 
-    // Initialize the distance of the start cell to 0
+    // Initialisation de la distance de la cellule de départ à 0
     dist[start_y][start_x] = 0;
 
-    // Directions: left, right, up, down
+    // Création du tas binaire
+    MinHeap* heap = create_min_heap(maze->width * maze->height);
+    insert_min_heap(heap, start_x, start_y, 0);
+
+    // Directions : gauche, droite, haut, bas
     int dir_x[] = {-1, 1, 0, 0};
     int dir_y[] = {0, 0, -1, 1};
 
-    // Main loop to explore the cells
-    while (true) {
-        // Find the cell with the smallest distance that has not been visited
-        int min_dist = min_distance(dist, visited, maze->width, maze->height);
-        if (min_dist == -1) break;  // If no cell is found, terminate
+    // Boucle principale pour explorer les cellules
+    while (heap->size > 0) {
+        // Extraire la cellule avec la plus petite distance
+        Node min_node = extract_min(heap);
+        int curr_x = min_node.x;
+        int curr_y = min_node.y;
 
-        // Mark the current cell as visited
-        int curr_x = -1, curr_y = -1;
-        for (int y = 0; y < maze->height; y++) {
-            for (int x = 0; x < maze->width; x++) {
-                if (dist[y][x] == min_dist && !visited[y][x]) {
-                    curr_x = x;
-                    curr_y = y;
-                    break;
-                }
-            }
-            if (curr_x != -1) break;
-        }
+        // Marquer la cellule actuelle comme visitée
         visited[curr_y][curr_x] = true;
 
-        // If the current cell is the exit, return the distance
+        // Si la cellule actuelle est la sortie, retourner la distance
         if (maze->grid[curr_y][curr_x].end) {
             int result = dist[curr_y][curr_x];
-            // Free memory before returning
+            // Libérer la mémoire avant de retourner
             for (int i = 0; i < maze->height; i++) {
                 free(dist[i]);
                 free(visited[i]);
             }
             free(dist);
             free(visited);
+            free(heap->nodes);
+            free(heap);
             return result;
         }
 
-        // Explore the neighbors (up, down, left, right)
+        // Explorer les voisins (haut, bas, gauche, droite)
         for (int d = 0; d < 4; d++) {
             int nx = curr_x + dir_x[d];
             int ny = curr_y + dir_y[d];
 
-            // Check if the neighbor is within bounds and not visited
+            // Vérifier si le voisin est dans les limites et non visité
             if (is_valid_move(maze, nx, ny, visited)) {
-                // Check for walls
-                if ((d == 0 && !maze->grid[curr_y][curr_x].left) ||   // Left
-                    (d == 1 && !maze->grid[curr_y][curr_x].right) ||  // Right
-                    (d == 2 && !maze->grid[curr_y][curr_x].up) ||     // Up
-                    (d == 3 && !maze->grid[curr_y][curr_x].down)) {   // Down
+                // Vérifier les murs
+                if ((d == 0 && !maze->grid[curr_y][curr_x].left) ||   // Gauche
+                    (d == 1 && !maze->grid[curr_y][curr_x].right) ||  // Droite
+                    (d == 2 && !maze->grid[curr_y][curr_x].up) ||     // Haut
+                    (d == 3 && !maze->grid[curr_y][curr_x].down)) {   // Bas
 
-                    // If the distance can be reduced, update it
+                    // Si la distance peut être réduite, la mettre à jour
                     if (dist[curr_y][curr_x] + 1 < dist[ny][nx]) {
                         dist[ny][nx] = dist[curr_y][curr_x] + 1;
+                        insert_min_heap(heap, nx, ny, dist[ny][nx]);
                     }
                 }
             }
         }
     }
 
-    // If no solution is found, free memory and return -1
+    // Si aucune solution n'est trouvée, libérer la mémoire et retourner -1
     for (int i = 0; i < maze->height; i++) {
         free(dist[i]);
         free(visited[i]);
     }
     free(dist);
     free(visited);
+    free(heap->nodes);
+    free(heap);
 
     return -1;
 }
