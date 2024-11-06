@@ -48,7 +48,6 @@ int main() {
         {800, 800},
         {900, 900},
         {1000, 1000}
-
     };
     int num_tests = sizeof(sizes) / sizeof(sizes[0]);
     

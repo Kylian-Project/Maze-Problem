@@ -12,6 +12,11 @@ typedef struct {
     int y;
 } Position;
 
+typedef struct {
+    Position pos;
+    int direction;
+} StackNode;
+
 bool dfs(Maze* maze, bool** visited, Position current, Position end, Position path[], int* path_index);
 int  solve_maze(Maze* maze, Position start, Position end);
 bool is_valid(Maze* maze, bool** visited, int x, int y);

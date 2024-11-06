@@ -1,14 +1,5 @@
 #include "../include/maze.h"
-
-typedef struct {
-    int x;
-    int y;
-} Position;
-
-typedef struct {
-    Position pos;
-    int direction;
-} StackNode;
+#include "../include/path_finding.h"
 
 bool is_valid(Maze* maze, bool** visited, int x, int y) {
     return (x >= 0 && x < maze->width && y >= 0 && y < maze->height && !visited[y][x]);
