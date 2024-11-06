@@ -26,12 +26,15 @@ int main(int argc, char *argv[]) {
     
     // Gen maze
     generate_maze(maze);
+
+    Position start = {0, 0};
+    Position end = {maze->width - 1, maze->height - 1};
     
     // Print maze with beauti ASCII :)
     print_maze(maze);
 
     // Display path length
-    int path_length = dijkstra(maze);
+    int path_length =  solve_maze(maze, start, end);
     printf("Path length: %d\n", path_length);
     
     // Free maze

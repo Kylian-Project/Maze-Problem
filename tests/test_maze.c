@@ -8,7 +8,10 @@ void test_maze_path(int width, int height) {
     Maze* maze = init_maze(width, height);
     generate_maze(maze);
 
-    int path_length = dijkstra(maze);
+    Position start = {0, 0};
+    Position end = {maze->width - 1, maze->height - 1};
+
+    int path_length = solve_maze(maze, start, end);;
     
     if (path_length == -1) {
         fprintf(stderr, "Error: No path found in maze of size %dx%d\n", width, height);
