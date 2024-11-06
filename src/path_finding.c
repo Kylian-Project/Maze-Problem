@@ -1,41 +1,17 @@
-#include "../include/path_finding.h"
+#include "../include/maze.h"
+
+typedef struct {
+    int x;
+    int y;
+} Position;
+
+typedef struct {
+    Position pos;
+    int direction;
+} StackNode;
 
 bool is_valid(Maze* maze, bool** visited, int x, int y) {
     return (x >= 0 && x < maze->width && y >= 0 && y < maze->height && !visited[y][x]);
-}
-
-bool dfs(Maze* maze, bool** visited, Position current, Position end, Position path[], int* path_index) {
-    if (current.x == end.x && current.y == end.y) {
-        path[(*path_index)++] = current;
-        return true;
-    }
-
-    visited[current.y][current.x] = true;
-    path[(*path_index)++] = current;
-
-    Position directions[] = {
-        {current.x + 1, current.y}, // Right
-        {current.x - 1, current.y}, // Left
-        {current.x, current.y + 1}, // Down
-        {current.x, current.y - 1}  // Up
-    };
-
-    for (int i = 0; i < 4; i++) {
-        Position next = directions[i];
-        if (is_valid(maze, visited, next.x, next.y)) {
-            if ((i == 0 && !maze->grid[current.y][current.x].right) || 
-                (i == 1 && !maze->grid[current.y][current.x].left) || 
-                (i == 2 && !maze->grid[current.y][current.x].down) || 
-                (i == 3 && !maze->grid[current.y][current.x].up)) {
-                if (dfs(maze, visited, next, end, path, path_index)) {
-                    return true;
-                }
-            }
-        }
-    }
-
-    (*path_index)--;
-    return false;
 }
 
 int solve_maze(Maze* maze, Position start, Position end) {
@@ -47,25 +23,52 @@ int solve_maze(Maze* maze, Position start, Position end) {
         }
     }
 
-    Position path[maze->width * maze->height];
-    int path_index = 0;
+    Position directions[] = {
+        {1, 0}, // Right
+        {-1, 0}, // Left
+        {0, 1}, // Down
+        {0, -1}  // Up
+    };
 
-    if (dfs(maze, visited, start, end, path, &path_index)) {
-        printf("Path found:\n");
-        for (int i = 0; i < path_index; i++) {
-            printf("(%d, %d)\n", path[i].x, path[i].y);
+    StackNode* stack = (StackNode*)malloc(maze->width * maze->height * sizeof(StackNode));
+    int stack_size = 0;
+
+    stack[stack_size++] = (StackNode){start, 0};
+    visited[start.y][start.x] = true;
+
+    while (stack_size > 0) {
+        StackNode current = stack[--stack_size];
+        Position pos = current.pos;
+
+        if (pos.x == end.x && pos.y == end.y) {
+            for (int i = 0; i < maze->height; i++) {
+                free(visited[i]);
+            }
+            free(visited);
+            free(stack);
+            return stack_size + 1;
         }
-        for (int i = 0; i < maze->height; i++) {
-            free(visited[i]);
+
+        for (int i = current.direction; i < 4; i++) {
+            Position next = {pos.x + directions[i].x, pos.y + directions[i].y};
+            if (is_valid(maze, visited, next.x, next.y)) {
+                if ((i == 0 && !maze->grid[pos.y][pos.x].right) || 
+                    (i == 1 && !maze->grid[pos.y][pos.x].left) || 
+                    (i == 2 && !maze->grid[pos.y][pos.x].down) || 
+                    (i == 3 && !maze->grid[pos.y][pos.x].up)) {
+                    stack[stack_size++] = (StackNode){pos, i + 1};
+                    stack[stack_size++] = (StackNode){next, 0};
+                    visited[next.y][next.x] = true;
+                    break;
+                }
+            }
         }
-        free(visited);
-        return path_index;
-    } else {
-        printf("No path found.\n");
-        for (int i = 0; i < maze->height; i++) {
-            free(visited[i]);
-        }
-        free(visited);
-        return -1;
     }
+
+    for (int i = 0; i < maze->height; i++) {
+        free(visited[i]);
+    }
+    free(visited);
+    free(stack);
+    return -1;
 }
