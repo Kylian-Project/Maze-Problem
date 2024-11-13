@@ -62,6 +62,7 @@ This will compile and run the tests defined in `tests/test_maze.c`.
 ## Screenshots
 
 ![Maze Example](https://raw.githubusercontent.com/Kylian-Project/Maze-Problem/refs/heads/main/dist/maze_ex.png?token=GHSAT0AAAAAACYRCR6YJQQQYZ4OTG5DSLBWZYKLMWA)
+
 ![Maze_with_path](https://github.com/user-attachments/assets/bfab6000-8035-4a83-bc74-e0414cf9dff8)
 <hr>
 
